@@ -2,7 +2,7 @@ import os
 import numpy as np
 import cv2
 
-# from lib.visualization import plotting
+from lib.visualization import plotting
 from lib.visualization.video import play_trip
 import matplotlib.pyplot as plt
 
@@ -13,12 +13,12 @@ class VisualOdometry():
     def __init__(self, data_dir):
         self.K, self.P = self._load_calib(os.path.join(data_dir, 'calib_nuance_camera.txt'))
         # self.gt_poses = self._load_poses(os.path.join(data_dir,"poses.txt"))
-        self.num_images,self.images = self._load_images(os.path.join(data_dir,"images_nuance"))
+        self.num_images,self.images = self._load_images(os.path.join(data_dir,"CAM0_Dataset"))
         self.orb = cv2.ORB_create(2000)
         FLANN_INDEX_LSH = 6
         index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1)
         # index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=12, key_size=20, multi_probe_level=2)
-        search_params = dict(checks=200)
+        search_params = dict(checks=50)
         self.flann = cv2.FlannBasedMatcher(indexParams=index_params, searchParams=search_params)
         
         
@@ -123,7 +123,7 @@ class VisualOdometry():
         good = []
         try:
             for m, n in matches:
-                if m.distance < 0.8 * n.distance:
+                if m.distance < 0.7 * n.distance:
                     good.append(m)
         except ValueError:
             pass
@@ -269,20 +269,26 @@ def main():
         estimated_path.append((cur_pose[0, 3], cur_pose[2, 3]))
     ### the lib.visualization has some dependecies wrt bokeh package
     ### I was unable to get the right version of bokeh package to get this running so I chose basic matplotlib
-    # plotting.visualize_paths(gt_path, estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
+        if (i%50==0):
+
+            plotting.visualize_paths(estimated_path,estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
+    
+    plotting.visualize_paths(estimated_path,estimated_path, "Visual Odometry", file_out=os.path.basename(data_dir) + ".html")
+    print(estimated_path)
+    
 
 
     ## Plotting with matplotlib
-    fig = plt.figure()
-    ax = plt.axes()
-    ax.axis('equal')
-    x_list =[]
-    y_list = []
-    for x,y in estimated_path:
-        x_list.append(x)
-        y_list.append(y)
-    ax.scatter(x_list,y_list)
-    plt.show()
+    # fig = plt.figure()
+    # ax = plt.axes()
+    # ax.axis('equal')
+    # x_list =[]
+    # y_list = []
+    # for x,y in estimated_path:
+    #     x_list.append(x)
+    #     y_list.append(y)
+    # ax.scatter(x_list,y_list)
+    # plt.show()
 
 if __name__ == "__main__":
     main()
